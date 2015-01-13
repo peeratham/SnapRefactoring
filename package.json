@@ -1,0 +1,21 @@
+{
+  "name": "Snap-Refactoring",
+  "version": "0.0.1",
+  "description": "Refactoring for Snap",
+  "author": "Peeratham",
+  "bin": {
+    "module-name": "./bin/module-name"
+  },
+  "devDependencies": {
+    "jasmine-core": "^2.1.3",
+    "jasmine-jquery": "^2.0.5",
+    "jquery": "1.11.0",
+    "karma": "~0.12.0",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-jasmine": "~0.2.0",
+    "karma-jasmine-jquery": "^0.1.1",
+    "karma-jquery": "^0.1.0",
+    "karma-junit-reporter": "^0.2.2",
+    "karma-requirejs": "^0.2.2"
+  }
+}
