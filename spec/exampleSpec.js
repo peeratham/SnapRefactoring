@@ -14,9 +14,9 @@ describe("Example suite2", function() {
 });
 
 describe("Example suite3", function() {
+  jasmine.getFixtures().fixturesPath = './base/src/';
+  
   it("contains spec with an expectation", function() {
-	
-	jasmine.getFixtures().fixturesPath = './base/src/';
 	loadFixtures('fixture.html');
 	console.log($("#jasmine-fixtures"));
 	console.log($("p"));
