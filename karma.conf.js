@@ -5,8 +5,9 @@ module.exports = function(config) {
   	
   	files :[
   		'spec/*.js',
-      {pattern: 'src/*.js', watched: true, included: true, served: true},
-      {pattern: 'src/*.html', watched: true, included: true, served: true}
+      {pattern: 'snap/*.js', watched: true, included: true, served: true},
+      {pattern: 'refactoring/*.js', watched: true, included: true, served: true},
+      {pattern: 'fixtures/*.html', watched: true, included: false, served: true}
   	],
 
   	autoWatch : true,

@@ -73,3 +73,14 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+*.jpg
+*.gif
+*.gif
+*.wav
+*.png
+*.png
+*.pdf
+*.mp3
+snap/favicon.ico
+*.txt
+libraries/*.xml

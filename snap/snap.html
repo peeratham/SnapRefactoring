@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Snap! Build Your Own Blocks. Beta</title>
+		<link rel="shortcut icon" href="favicon.ico">
+		<script type="text/javascript" src="snap.js"></script>
+		<script type="text/javascript" src="../node_modules/jquery/dist/jquery.js"></script>
+		<script type="text/javascript" src="../refactoring/block-mod.js"></script>
+		<script type="text/javascript" src="../refactoring/refactoring.js"></script>
+		
+		<script type="text/javascript">
+			var world;
+			var ide;
+			window.onload = function () {
+				world = new WorldMorph(document.getElementById('world'));
+                world.worldCanvas.focus();
+				world.isDevMode = true;
+				ide = new IDE_Morph();
+				ide.openIn(world);
+				// ide.refactoring();
+				setInterval(loop, 1);
+			};
+			
+			function loop() {
+				world.doOneCycle();
+			}
+		</script>
+	</head>
+	<body style="margin: 0;">
+		<canvas id="world" tabindex="1" style="position: absolute;" />
+	</body>
+</html>
