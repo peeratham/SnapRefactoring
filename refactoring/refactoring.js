@@ -1,78 +1,55 @@
-function Scope(){
-  this.init();
+function Scope($xml){
+//   this.init();
+  this.$xml = $xml;
+  if(this.$xml.children('script').length > 0){
+    this.$blocks = this.$xml.children('script').children();
+  }
+  this.rep = this.getXMLString();
+  
 }
 
-Scope.prototype.init = function(){
-  this.childScopes = [];
-  this.parentScope = null;
-};
-
-Scope.prototype.setScope = function(element){
-  this.scopeObject = element;
-  this.xmlString = ide.serializer.serialize(this.scopeObject);
-  this.xmlDoc = $.parseXML(this.xmlString);
-};
-
-Scope.prototype.setStringScope = function(string){
-  this.xmlString = string;
-  this.xmlDoc = $.parseXML(string);
-  this.processScopes();
-};
-
-Scope.prototype.getScope = function(){
-  return this.scopeObject;
-};
-
-Scope.prototype.toXMLString = function(){
-  return this.xmlString;
-};
-
-Scope.prototype.getSelectedScope = function(id){
-  var current = $(this.xmlDoc).find('#'+id)[0];
-  while(current.tagName != 'script'){
-    current = current.parentNode;
+Scope.prototype.getXMLString = function(){
+  if(this.$xml[0] instanceof XMLDocument){
+    return this.$xml.children('script')[0].outerHTML;
   }
-  if(current.parentNode.tagName == 'block'){
-    current = current.parentNode;
+  return this.$xml[0].outerHTML;
+};
+
+Scope.prototype.getScopeByID = function(id){
+  node = this.getNodeByID(id);
+  return this.getScopeOfNode(node);
+};
+
+Scope.prototype.getScopeOfNode = function($node){
+  var current = $node;
+  while(current[0].tagName != 'script'){
+    current = current.parent();
   }
-  return current;
+  if(current[0].parentNode.tagName == 'block'|| current[0].parentNode instanceof XMLDocument){
+    current = current.parent();
+  }
+  return new Scope(current);
 };
 
-Scope.prototype.getSelectedElementString = function(){
-  return $(this.xmlDoc).find('#selected')[0].outerHTML;
-};
-
-Scope.prototype.getAllElements = function(){
-  return $(this.xmlDoc).find('block');
-};
-
-Scope.prototype.processScopes = function(){
-  //process identifiers in current scope
-  //e.g. script variable, function
-  this.context = $(this.xmlDoc).children('script');
-  this.scope = this.context.children('block[s="doDeclareVariables"]');
-
-  innerScopes = this.context.children('block[s="doRepeat"],block[s="doForever"]');
-  //for each child make it a scope object
-  var resultArray=[];
-  var thisScope = this;
-  innerScopes.each(function(idx,el){
-    var temp = new Scope();
-    temp.setStringScope($(el).children('script')[0].outerHTML);
-    temp.parentScope = thisScope;
-    resultArray.push(temp);
-  });
-  this.childScopes = resultArray;
-
+Scope.prototype.getNodeByID = function(id){
+  return this.$xml.find('#'+id);
 };
 
 Scope.prototype.getChildScopes = function(){
+
+  resultArray=[];
+  innerScopes = this.$xml.children('script').children('block[s="doRepeat"],block[s="doForever"]');
+  innerScopes.each(function(idx,el){
+    var temp = new Scope($(el));
+    resultArray.push(temp);
+  });
+  this.childScopes = resultArray;
   return this.childScopes;
 };
 
 Scope.prototype.lookup = function(name){
-  var scope = this.scope;
-  var result = scope.find('l:contains("'+name+'")');
+  declarations = this.$blocks.filter('block[s="doDeclareVariables"]');
+  var result = declarations.find('l:contains("'+name+'")');
   if(result.length==0){
     return null;
   }
@@ -80,41 +57,64 @@ Scope.prototype.lookup = function(name){
 };
 
 Scope.prototype.getParentScope = function(){
-  return this.parentScope;
+  var current = this.$xml.parent();
+
+  while(current[0].tagName != "script"){
+    current = current.parent(); 
+  }
+  return new Scope(current.parent());
 };
 
-Scope.prototype.getDeclaredScope = function(){
+Scope.prototype.getDeclaredScope = function($node){
+  var name = $node.attr('var')|| $node[0].textContent;
+  var currentScope = this.getScopeOfNode($node);
+  while(currentScope.lookup(name)==null){
+    currentScope = currentScope.getParentScope();
+  }
+  return currentScope;
+};
 
+Scope.prototype.getDeclaredScopeByID = function(id){
+  return this.getDeclaredScope(this.getNodeByID(id));
 };
 
 
-function scopeToString(node){
-  return node.outerHTML;
+
+function Rename(){
 }
 
-function getSelector(node){
-  return node.getAttribute('s');
-}
+Rename.prototype.localRename = function(scope, selectedScope, oldName, inputName){
+  var newName = inputName;
+  occurrences = Refactorer.prototype.findOccurrences(scope, oldName);
+  
+  
+  occurrences.each(function(idx,el){
+    el.declaredScope = scope.getDeclaredScope($(el));  
+  });
+  
+  occurrences.each(function(idx,el){
+    //precondition: if shadowing?
+    if(el.declaredScope.$xml.is(selectedScope.$xml)){
+      if(el.tagName == 'l'){
+        el.textContent = newName;
+      } else if( el.tagName == 'block'){
+        $(el).attr('var',newName);
+      }
 
-
-function Refactorer(){
-  this.init();
-}
-
-Refactorer.prototype.init = function(){
-  this.scope = new Scope();
+    }
+    
+  });
+  return scope.getXMLString();
 };
 
-Refactorer.prototype.setScope = function(element){
-  this.scope.setScope(element);
-};
 
-Refactorer.prototype.getCurrentContextString = function(){
-  return this.scope.getScopeXML();
-};
+function Refactorer(){}
 
-Refactorer.prototype.getScopeObject = function(){
-  return this.scope;
+
+Refactorer.prototype.findOccurrences = function(scope, name){
+  sc = scope;
+  resultOccurs = scope.$xml.find('block[var='+name+'], l:contains('+name+')');
+  return resultOccurs;
 };
 
 
@@ -130,5 +130,5 @@ function xmlToString(xmlData) {
   }
   return xmlString;
 }
-// http://api.jquery.com/multiple-attribute-selector/
-// http://api.jquery.com/category/selectors/attribute-selectors/
+// // http://api.jquery.com/multiple-attribute-selector/
+// // http://api.jquery.com/category/selectors/attribute-selectors/
